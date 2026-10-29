@@ -1,13 +1,13 @@
 import torch.nn as nn
 import torch
-from classes_functions.self_attention import MultiHeadAttentionWrapper
+from classes_functions.self_attention import MultiHeadAttention
 from classes_functions.feed_forward import FeedForward
 from classes_functions.layer_norm import LayerNorm
 
 class TransformerBlock(nn.Module):
     def __init__(self, cfg):
         super().__init__()
-        self.att = MultiHeadAttentionWrapper(
+        self.att = MultiHeadAttention(
             d_in=cfg["emb_dim"],
             d_out=cfg["emb_dim"],
             context_length=cfg["context_length"],
@@ -21,6 +21,12 @@ class TransformerBlock(nn.Module):
         self.drop_shortcut = nn.Dropout(cfg["drop_rate"])
 
     def forward(self, x):
+        shortcut = x
+        x = self.norm1(x)
+        x = self.att(x)
+        x = self.drop_shortcut(x)
+        x = x + shortcut
+
         shortcut = x
         x = self.norm2(x)
         x = self.ff(x)
